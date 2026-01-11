@@ -1,5 +1,5 @@
 #include "Interface.h"
-#include "RtMidi.h"
+#include "RTLib.h"
 
 namespace RTMIDI
 {
