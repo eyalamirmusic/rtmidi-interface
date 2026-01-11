@@ -5,7 +5,7 @@ namespace RTMIDI
 {
 using StringVec = std::vector<std::string>;
 
-template<typename T>
+template <typename T>
 StringVec getPortNames()
 {
     auto in = T();
@@ -29,15 +29,13 @@ static StringVec getOutputPortNames()
     return getPortNames<RtMidiOut>();
 }
 
-static void debug(const StringVec& vec)
+PortList getPortList()
 {
-    for (auto& e: vec)
-        std::cout << e << std::endl;
-}
+    auto res = PortList();
 
-void printPorts()
-{
-    debug(getInputPortNames());
-    debug(getOutputPortNames());
+    res.inputs = getInputPortNames();
+    res.outputs = getOutputPortNames();
+
+    return res;
 }
 } // namespace RTMIDI

@@ -1,6 +1,14 @@
 #pragma once
 
+#include "Strings.h"
+
 namespace RTMIDI
 {
-void printPorts();
-}
+struct PortList
+{
+    StringVec inputs;
+    StringVec outputs;
+};
+
+PortList getPortList();
+} // namespace RTMIDI

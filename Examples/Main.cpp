@@ -2,5 +2,8 @@
 
 int main()
 {
-    RTMIDI::printPorts();
+    auto ports = RTMIDI::getPortList();
+
+    RTMIDI::LOG(ports.inputs);
+    RTMIDI::LOG(ports.outputs);
 }

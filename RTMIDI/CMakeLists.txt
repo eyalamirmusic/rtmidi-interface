@@ -1,4 +1,6 @@
-add_library(RTMIDI-Interface STATIC)
+add_library(RTMIDI-Interface STATIC
+        Strings.h
+        Strings.cpp)
 
 target_include_directories(RTMIDI-Interface
         PRIVATE ${RTMIDI_SOURCE_DIR}
@@ -8,7 +10,8 @@ target_compile_definitions(RTMIDI-Interface PRIVATE __MACOSX_CORE__=1)
 target_sources(RTMIDI-Interface PRIVATE
         ${RTMIDI_SOURCE_DIR}/RtMidi.cpp
         ${RTMIDI_SOURCE_DIR}/RtMidi_c.cpp
-        Interface.cpp)
+        Interface.cpp
+        Strings.cpp)
 
 target_link_libraries(RTMIDI-Interface PRIVATE
         "-framework CoreAudio"
