@@ -126,6 +126,62 @@ MessageData parseData(const RTMIDI::RawData& bytes)
     return Unknown(bytes);
 }
 
+void serialize(const Message& msg, RTMIDI::DataVec& outBytes)
+{
+    outBytes.clear();
+
+    auto push = [&](int byte)
+    { outBytes.push_back(static_cast<unsigned char>(byte)); };
+
+    auto makeStatusByte = [&](StatusType type, int channel)
+    { return static_cast<int>(type) | (channel & 0x0F); };
+
+    if (auto noteOn = msg.getAs<NoteOn>())
+    {
+        push(makeStatusByte(StatusType::NoteOn, noteOn->channel));
+        push(noteOn->note);
+        push(noteOn->velocity);
+    }
+    else if (auto noteOff = msg.getAs<NoteOff>())
+    {
+        push(makeStatusByte(StatusType::NoteOff, noteOff->channel));
+        push(noteOff->note);
+        push(noteOff->velocity);
+    }
+    else if (auto cc = msg.getAs<ControlChange>())
+    {
+        push(makeStatusByte(StatusType::ControlChange, cc->channel));
+        push(cc->controller);
+        push(cc->value);
+    }
+    else if (auto polyKey = msg.getAs<PolyKeyPressure>())
+    {
+        push(makeStatusByte(StatusType::PolyKeyPressure, polyKey->channel));
+        push(polyKey->note);
+        push(polyKey->pressure);
+    }
+    else if (auto progChange = msg.getAs<ProgramChange>())
+    {
+        push(makeStatusByte(StatusType::ProgramChange, progChange->channel));
+        push(progChange->program);
+    }
+    else if (auto chanPress = msg.getAs<ChannelPressure>())
+    {
+        push(makeStatusByte(StatusType::ChannelPressure, chanPress->channel));
+        push(chanPress->pressure);
+    }
+    else if (auto pitchBend = msg.getAs<PitchBend>())
+    {
+        push(makeStatusByte(StatusType::PitchBend, pitchBend->channel));
+        push(pitchBend->value & 0x7F);
+        push((pitchBend->value >> 7) & 0x7F);
+    }
+    else if (auto unknown = msg.getAs<Unknown>())
+    {
+        outBytes.insert(outBytes.end(), unknown->data.begin(), unknown->data.end());
+    }
+}
+
 Message parse(const RTMIDI::RawData& bytes)
 {
     auto m = Message();

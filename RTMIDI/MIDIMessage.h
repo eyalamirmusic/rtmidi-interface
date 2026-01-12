@@ -60,7 +60,7 @@ struct Sysex
     {
     }
 
-    std::span<const unsigned char> data;
+    RTMIDI::RawData data;
 };
 
 struct Unknown
@@ -71,7 +71,7 @@ struct Unknown
     {
     }
 
-    std::span<const unsigned char> data;
+    RTMIDI::RawData data;
 };
 
 using MessageData = std::variant<NoteOn,
@@ -95,6 +95,8 @@ struct Message
     MessageData data;
     double timeStamp = 0.0;
 };
+
+void serialize(const Message& msg, RTMIDI::DataVec& outBytes);
 
 using Callback = std::function<void(const Message&)>;
 

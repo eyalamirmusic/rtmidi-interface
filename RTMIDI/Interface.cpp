@@ -31,8 +31,14 @@ static StringVec getOutputPortNames()
 
 struct InputPort::Native
 {
-    void open(unsigned int index, const std::string& name)
+    ~Native() { close(); }
+    void open(unsigned int index,
+              const std::string& name,
+              const MIDI::Callback& cbToUse)
     {
+        cb = cbToUse;
+        close();
+
         auto nativeCb = [](double ts, DataVec* vec, void* user)
         {
             if (vec != nullptr)
@@ -49,24 +55,26 @@ struct InputPort::Native
         input.openPort(index, name);
     }
 
+    void close() { input.closePort(); }
+
     RtMidiIn input;
     MIDI::Callback cb;
 };
 
-InputPort::InputPort()
-{ native = std::make_unique<Native>(); }
+InputPort::InputPort(unsigned int index,
+                     const std::string& name,
+                     const MIDI::Callback& cb)
+{
+    native = std::make_unique<Native>();
+    open(index, name, cb);
+}
 
-InputPort::~InputPort()
-{ close(); }
+InputPort::~InputPort() = default;
 
 void InputPort::open(unsigned int index,
                      const std::string& name,
                      const MIDI::Callback& cb)
-{
-    close();
-    native->open(index, name);
-    native->cb = [cb](auto& m) { cb(m); };
-}
+{ native->open(index, name, cb); }
 
 void InputPort::close() const
 {
@@ -76,6 +84,48 @@ void InputPort::close() const
 
 bool InputPort::isOpen() const
 { return native->input.isPortOpen(); }
+
+struct OutputPort::Native
+{
+    ~Native() { close(); }
+    void open(unsigned int index, const std::string& name)
+    { out.openPort(index, name); }
+
+    void close()
+    {
+        if (isOpen())
+            out.closePort();
+    }
+
+    bool isOpen() const { return out.isPortOpen(); }
+
+    RtMidiOut out;
+};
+
+OutputPort::OutputPort(unsigned int index, const std::string& name)
+{
+    native = std::make_unique<Native>();
+    vec.reserve(200);
+
+    open(index, name);
+}
+
+OutputPort::~OutputPort() = default;
+
+void OutputPort::open(unsigned int index, const std::string& name)
+{ native->open(index, name); }
+
+void OutputPort::close() const
+{ native->close(); }
+
+bool OutputPort::isOpen() const
+{ return native->isOpen(); }
+
+void OutputPort::send(const MIDI::Message& m)
+{
+    MIDI::serialize(m, vec);
+    native->out.sendMessage(&vec);
+}
 
 PortList getPortList()
 {
