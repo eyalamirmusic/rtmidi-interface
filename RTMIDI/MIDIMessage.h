@@ -5,6 +5,7 @@
 
 namespace MIDI
 {
+
 struct NoteOn
 {
     int channel = 0;
@@ -26,6 +27,42 @@ struct ControlChange
     int value = 0;
 };
 
+struct PolyKeyPressure
+{
+    int channel = 0;
+    int note = 0;
+    int pressure = 0;
+};
+
+struct ProgramChange
+{
+    int channel = 0;
+    int program = 0;
+};
+
+struct ChannelPressure
+{
+    int channel = 0;
+    int pressure = 0;
+};
+
+struct PitchBend
+{
+    int channel = 0;
+    int value = 0;
+};
+
+struct Sysex
+{
+    Sysex() = default;
+    Sysex(const RTMIDI::RawData& in)
+        : data(in)
+    {
+    }
+
+    std::span<const unsigned char> data;
+};
+
 struct Unknown
 {
     Unknown() = default;
@@ -34,10 +71,18 @@ struct Unknown
     {
     }
 
-    std::span<unsigned char> data;
+    std::span<const unsigned char> data;
 };
 
-using MessageData = std::variant<NoteOn, NoteOff, ControlChange, Unknown>;
+using MessageData = std::variant<NoteOn,
+                                 NoteOff,
+                                 ControlChange,
+                                 PolyKeyPressure,
+                                 ProgramChange,
+                                 ChannelPressure,
+                                 PitchBend,
+                                 Sysex,
+                                 Unknown>;
 
 struct Message
 {
