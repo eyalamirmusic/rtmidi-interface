@@ -88,8 +88,14 @@ struct Message
 {
     std::string toString() const;
 
+    bool isStandardMessage() const noexcept { return !is<Sysex>() && !is<Unknown>(); }
+
     template <typename T>
-    const T* getAs() const
+    bool is() const noexcept
+    { return getAs<T>() != nullptr; }
+
+    template <typename T>
+    const T* getAs() const noexcept
     { return std::get_if<T>(&data); }
 
     MessageData data;
