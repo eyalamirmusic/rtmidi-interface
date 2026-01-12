@@ -8,7 +8,8 @@ target_compile_definitions(RTMIDI-Interface PRIVATE __MACOSX_CORE__=1)
 target_sources(RTMIDI-Interface PRIVATE
         RTLib.cpp
         Interface.cpp
-        Strings.cpp)
+        Strings.cpp
+        MIDIMessage.cpp)
 
 set_high_warnings_level(RTMIDI-Interface)
 
