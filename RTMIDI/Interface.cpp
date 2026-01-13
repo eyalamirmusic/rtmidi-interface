@@ -79,7 +79,7 @@ InputPort::InputPort(const PortInfo& infoToUse, const MIDI::Callback& cb)
 
 InputPort::~InputPort() = default;
 std::string InputPort::getName() const
-{ return native->input.getPortName(); }
+{ return info.name; }
 
 void InputPort::open(const MIDI::Callback& cb)
 { native->open(info, cb); }
@@ -134,6 +134,9 @@ void OutputPort::send(const MIDI::Message& m)
     MIDI::serialize(m, vec);
     native->out.sendMessage(&vec);
 }
+
+std::string OutputPort::getName() const
+{ return info.name; }
 
 PortList getPortList()
 {

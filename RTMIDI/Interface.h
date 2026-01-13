@@ -60,6 +60,7 @@ public:
     ~OutputPort();
 
     void send(const MIDI::Message& m);
+    std::string getName() const;
 
 private:
     void open();
