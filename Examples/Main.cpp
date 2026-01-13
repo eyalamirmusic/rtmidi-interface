@@ -10,15 +10,15 @@ int main()
     auto inputName = "Hammer 88";
     auto outputName = "Nord Stage 3";
 
-    auto input = RTMIDI::findFirstContainsIgnoreCase(ports.inputs, inputName);
-    auto output = RTMIDI::findFirstContainsIgnoreCase(ports.outputs, outputName);
+    auto input = RTMIDI::findFirstContains(ports.inputs, inputName);
+    auto output = RTMIDI::findFirstContains(ports.outputs, outputName);
 
-    if (input >= 0 && output >= 0)
+    if (input && output)
     {
-        auto outputPort = RTMIDI::OutputPort(output, outputName);
+        auto outputPort = RTMIDI::OutputPort(output);
         auto cb = [&](const MIDI::Message& m) { outputPort.send(m); };
 
-        auto inputPort = RTMIDI::InputPort(input, inputName, cb);
+        auto inputPort = RTMIDI::InputPort(input, cb);
 
         while (true)
         {

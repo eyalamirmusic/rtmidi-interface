@@ -5,22 +5,49 @@
 
 namespace RTMIDI
 {
+struct PortInfo
+{
+    operator bool() const { return !name.empty(); }
+
+    unsigned int index = 0;
+    std::string name;
+};
+
+using Ports = std::vector<PortInfo>;
+
+inline PortInfo findFirstContains(const Ports& vec, const std::string& text)
+{
+    for (auto& port: vec)
+    {
+        if (contains(port.name, text))
+            return port;
+    }
+
+    return {};
+}
+
 struct PortList
 {
-    StringVec inputs;
-    StringVec outputs;
+    Ports inputs;
+    Ports outputs;
 };
+
+void LOG(const Ports& ports);
 
 class InputPort
 {
 public:
-    InputPort(unsigned int index, const std::string& name, const MIDI::Callback& cb);
+    InputPort(const PortInfo& infoToUse, const MIDI::Callback& cb);
     ~InputPort();
 
+    std::string getName() const;
+
 private:
-    void open(unsigned int index, const std::string& name, const MIDI::Callback& cb);
+    void open(const MIDI::Callback& cb);
     void close() const;
     bool isOpen() const;
+
+    PortInfo info;
 
     struct Native;
     std::unique_ptr<Native> native;
@@ -29,19 +56,20 @@ private:
 class OutputPort
 {
 public:
-    OutputPort(unsigned int index, const std::string& name);
+    OutputPort(const PortInfo& infoToUse);
     ~OutputPort();
 
     void send(const MIDI::Message& m);
 
 private:
-    void open(unsigned int index, const std::string& name);
+    void open();
     void close() const;
     bool isOpen() const;
 
     struct Native;
     std::unique_ptr<Native> native;
 
+    PortInfo info;
     DataVec vec;
 };
 

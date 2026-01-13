@@ -5,25 +5,30 @@ namespace RTMIDI
 {
 using StringVec = std::vector<std::string>;
 
-StringVec getPortNames(RtMidi& in)
+Ports getPortNames(RtMidi& in)
 {
-    auto res = StringVec();
+    auto res = Ports();
     auto size = in.getPortCount();
     res.reserve(size);
 
     for (size_t index = 0; index < size; ++index)
-        res.push_back(in.getPortName(index));
+    {
+        auto port = PortInfo();
+        port.name = in.getPortName(index);
+        port.index = index;
+        res.push_back(port);
+    }
 
     return res;
 }
 
-static StringVec getInputPortNames()
+static Ports getInputPortNames()
 {
     auto m = RtMidiIn();
     return getPortNames(m);
 }
 
-static StringVec getOutputPortNames()
+static Ports getOutputPortNames()
 {
     auto m = RtMidiOut();
     return getPortNames(m);
@@ -32,9 +37,7 @@ static StringVec getOutputPortNames()
 struct InputPort::Native
 {
     ~Native() { close(); }
-    void open(unsigned int index,
-              const std::string& name,
-              const MIDI::Callback& cbToUse)
+    void open(const PortInfo& info, const MIDI::Callback& cbToUse)
     {
         cb = cbToUse;
         close();
@@ -52,7 +55,7 @@ struct InputPort::Native
         };
 
         input.setCallback(nativeCb, this);
-        input.openPort(index, name);
+        input.openPort(info.index, info.name);
     }
 
     void close() { input.closePort(); }
@@ -61,20 +64,25 @@ struct InputPort::Native
     MIDI::Callback cb;
 };
 
-InputPort::InputPort(unsigned int index,
-                     const std::string& name,
-                     const MIDI::Callback& cb)
+void LOG(const Ports& ports)
+{
+    for (auto& port: ports)
+        LOG(port.name);
+}
+
+InputPort::InputPort(const PortInfo& infoToUse, const MIDI::Callback& cb)
+    : info(infoToUse)
 {
     native = std::make_unique<Native>();
-    open(index, name, cb);
+    open(cb);
 }
 
 InputPort::~InputPort() = default;
+std::string InputPort::getName() const
+{ return native->input.getPortName(); }
 
-void InputPort::open(unsigned int index,
-                     const std::string& name,
-                     const MIDI::Callback& cb)
-{ native->open(index, name, cb); }
+void InputPort::open(const MIDI::Callback& cb)
+{ native->open(info, cb); }
 
 void InputPort::close() const
 {
@@ -88,8 +96,7 @@ bool InputPort::isOpen() const
 struct OutputPort::Native
 {
     ~Native() { close(); }
-    void open(unsigned int index, const std::string& name)
-    { out.openPort(index, name); }
+    void open(const PortInfo& info) { out.openPort(info.index, info.name); }
 
     void close()
     {
@@ -102,18 +109,19 @@ struct OutputPort::Native
     RtMidiOut out;
 };
 
-OutputPort::OutputPort(unsigned int index, const std::string& name)
+OutputPort::OutputPort(const PortInfo& infoToUse)
+    : info(infoToUse)
 {
     native = std::make_unique<Native>();
     vec.reserve(200);
 
-    open(index, name);
+    open();
 }
 
 OutputPort::~OutputPort() = default;
 
-void OutputPort::open(unsigned int index, const std::string& name)
-{ native->open(index, name); }
+void OutputPort::open()
+{ native->open(info); }
 
 void OutputPort::close() const
 { native->close(); }
